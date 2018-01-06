@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<!--
+Justin VanderBerg
+December 16, 2017 
+This is a replica of the mobile game flappy bird. This game has a temporary high score(the high score of the 
+current session, when the page is reloaded or closed, the highscore goes back to 0), a pause screen for the user
+and a screen that shows up at the end of the game. The bird gets controlled by the spacebar and pause screen is
+activated by pressing "p".
+-->
+<html>
+    <head>
+        <title>Flappy Bird</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <!--All the styling for the canvas, buttons and all screens. There is the main div for the main screen, this holds all further child
+        buttons and div tags for the screen. This is used to properly play buttons on the canvas
+        -->
+        <style>
+            #mainScreen{
+                padding: 0;
+                margin: auto;
+                display: block;
+                width: 800px;
+                height: 550px;
+                position: absolute;
+                top: 0;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                z-index: 0;
+            }
+            canvas{
+                position: absolute;
+                z-index: 1;
+                display: block;
+            }
+            #startButton{
+                position: absolute;
+                width: 400px;
+                height: 100px;
+                top: 200px;
+                left: 200px;
+                z-index:2;
+            }
+            #instructionButton{
+                position: absolute;
+                width: 400px;
+                height: 100px;
+                top: 400px;
+                left: 200px;
+                z-index: 3;
+            }
+            .buttonStart{
+                background-color: #458B00;
+                border-radius:15px;
+                text-align: center;
+                color: black;
+                font-size: 40px;
+                border: none;
+                display: block;
+            }
+            .buttonStart:hover{
+                background-color: #4A7023;
+            }
+            .endScreen{
+                background-color: #458B00;
+                display: none;
+                border-radius:15px;
+                text-align: center;
+                width: 250px;
+                height: 75px;
+                color: black;
+                font-size: 40px;
+                border: none;
+                display: block;
+            }
+            .endScreen:hover{
+                background-color: #4A7023;
+            }
+            #playAgain {
+                position: absolute;
+                top: 450px;
+                left: 50px;
+                z-index: 4;
+            }
+            #startScreen {
+                position: absolute;
+                top: 450px;
+                left: 500px;
+                z-index: 5;
+            }
+        </style>
+    </head>
+    <body>
+        <!--This is the main viewing of the screen. The two buttons are used for the start
+        and instructions on the main screen-->
+        <div id = "mainScreen" >
+            <canvas id="myCanvas" width="800" height="550" tabindex = "1"></canvas>
+            <button id = "startButton" class = "buttonStart" onmousedown = "startButton()">START</button>
+            <button id = "instructionButton" class = "buttonStart" onmousedown = "instructionButton()">INSTRUCTIONS</button>
+            <div id ="endScreen" >
+                <button id ="startScreen" class  = "endScreen" onmousedown ="startScreen()">Start Screen</button>
+                <button id ="playAgain" class  = "endScreen" onmousedown ="startButton()">Play Again</button>
+            </div>
+        </div>
+        <script>
+            //initialize all the images
+            var coinImage = new Image();
+            var pipeDown = new Image();
+            var pipeUp = new Image();
+            var extraPipe = new Image();
+            var pauseSign = new Image();
+            var birdPic = new Image();
+            //create canvas and and the 2d canvas variables, used to draw
+            var canvas = document.getElementById("myCanvas");
+            var ctx;
+            var highScore = 0;
+            //boolean to tell computer if the start screen is showing
+            var gameState = "startScreen";
+            //variables to store the width and height of the canvas
+            var WIDTH;
+            var HEIGHT;
+            var score = 0;
+            //object to hold values of the bird
+            var bird = {
+                position: {x: 70, y: 150}, //current x and y position of bird
+                velocityY: 0, //current bird velocity
+                radius: 16, //size of the bird
+                collision: false
+            };
+            //object used for all the pipes
+            var pipes = {
+                position: {x: [], y: []}, //and x and y array used to store the pipes location(x) and where the middle of the space between the pipes is
+                space: 120, //Space in between top and bottom pipe
+                speed: 5
+            };
+            //object that holds all relevent info to the coins
+            var coin = {
+                position: {x: [], y: [], showing: []}, //x,y and showing array that is used to collect coins
+                radius: 12.5,
+                size: {x: 25, y: 25},
+                speed: 5
+            };
+            //Function to draw a circle
+            function ellipse(x, y, r) {
+                ctx.beginPath();
+                ctx.arc(x, y, r, 0, Math.PI * 2);
+                ctx.closePath();
+                ctx.fill();
+            }
+            //function to draw a rectangle, often used for background of canvas
+            //or the scene
+            function rect(x, y, w, h) {
+                ctx.beginPath();
+                ctx.rect(x, y, w, h);
+                ctx.closePath();
+                ctx.fill();
+            }
+            //function that gets run on page load
+            function startScreen() {
+                //get all the instances of the end game buttons and draw the buttons
+                var x = document.getElementsByClassName("endScreen");
+                for (var i = 0; i < x.length; i++) {
+                    x[i].style.display = "none";
+                }
+                //get all the instences of the class name button start, which are the start and instruction buttons
+                //this is used to make the buttons invisible
+                var x = document.getElementsByClassName("buttonStart");
+                //loop through all the instinces of the class button start and set the display property to block, so 
+                //it is now visible again
+                for (var i = 0; i < x.length; i++) {
+                    x[i].style.display = "block";
+                }
+                gameState = "startScreen";
+                //draw background
+                ctx.fillStyle = "#000000";
+                rect(0, 0, WIDTH, HEIGHT);
+                //Draw the title of the document
+                ctx.fillStyle = "#76EE00"; //green
+                //draw text
+                ctx.font = "100px Verdana";
+                ctx.fillText("FLAPPY BIRD", 75, 100);
+            }
+            //function that tells the user how to play when the instruction button is clicked
+            function instructionButton() {
+                alert("The goal of this game is to travel for as long as possible without hitting one of the white " +
+                        "rectangles. The ball is controlled by the space bar. Every time the spacebar is clicked, the " +
+                        "ball is accelerated upwards. Hit \"p\" to pause");
+            }
+            //function that starts the game for the user. Used from main menu, or after the start screen is showed
+            function startButton() {
+                //get all the instences of the class name button start, which are the start and instruction buttons
+                //this is used to make the buttons invisible
+                var x = document.getElementsByClassName("buttonStart");
+                //number of end screen buttons is same as start sccreen, so x and y have same length
+                var y = document.getElementsByClassName("endScreen");
+                //RESET all variables
+                pipes.position.x.length = 0;
+                pipes.position.y.length = 0;
+                coin.position.x.length = 0;
+                coin.position.y.length = 0;
+                coin.position.showing.length = 0;
+                //draw the first pipe to make sure all next pipes get drawn
+                pipes.position.x[0] = 800;
+                pipes.position.y[0] = 300;
+                addCoins(300);
+                bird.position.x = 70;
+                bird.position.y = 150;
+                bird.velocityY = 0;
+                score = 0;
+                bird.collision = false;
+                currentFrames = 0;
+                gameState = "playing";
+                //loop through all the instinces of the class button start and end screen and set the display property to none, so 
+                //it can't be clicked or seen
+                for (var i = 0; i < x.length; i++) {
+                    x[i].style.display = "none";
+                    //I can loop through y at the same length because I know both arrays hold two button instances
+                    y[i].style.display = "none";
+                }
+                requestAnimationFrame(gameLoop);
+            }
+            //function to detect collision
+            function checkCollision() {
+                //check if the pipe is in the x area of user
+                for (var i = 0; i < pipes.position.x.length; i++) {
+                    //check if x position is around bird position
+                    if ((pipes.position.x[i] < bird.position.x + bird.radius) && (pipes.position.x[i] + 30 > bird.position.x - bird.radius)) {
+                        //if the pipe is in the possible location of the bird, check if the bird has made it through the pipe
+                        if ((pipes.position.y[i] + pipes.space / 2 < bird.position.y + bird.radius) || (pipes.position.y[i] - pipes.space / 2 > bird.position.y - bird.radius)) {
+                            bird.collision = true;
+                        }
+                    }
+                }
+                //check if user has hit roof or floor
+                if (bird.position.y + bird.radius > HEIGHT) {
+                    bird.collision = true;
+                }
+
+            }
+            //Runs whenever the user clickes the space bar. This then sets the birds velocity upwards
+            function jump(event) {
+                //change the velocity if the user has pressed the space bar
+                if (event.key === " " && gameState === "playing") {
+                    //subtracts 12 from the current velocity, as down is positive, and the bird wants to go up on a jump
+                    bird.velocityY = -12;
+                }
+                //if the user is currently playing and presses p, pause the game
+                if (gameState === "playing" && event.key === "p") {
+                    gameState = "paused";
+                    ctx.drawImage(pauseSign, 135, 30, 500, 500);
+                    //if the user is paused, and presses p, start the game again
+                } else if (gameState === "paused" && event.key === "p") {
+                    gameState = "playing";
+                    requestAnimationFrame(gameLoop);
+                }
+            }
+            //calculates the birds movements
+            function move() {
+                //default gravity amount to 0.7
+                var gravity = 0.7;
+                //add the gravity to the velocity, and then add the velocity to the birds position
+                bird.velocityY += gravity;
+                //multiply the velocity by 0.95, used to make the bird have a seemingly terminal velocity
+                bird.velocityY *= 0.95;
+                //add the velocity to the birds position
+                bird.position.y += bird.velocityY;
+            }
+            //Draw the bird on the screen
+            function drawBird() {
+                ctx.drawImage(birdPic, bird.position.x - 70, bird.position.y - 45, 135, 100);
+            }
+            //function to draw the pipes on the screen
+            function drawPipes() {
+                var centerAmount = pipes.space;
+                var randomCenter;
+                //var shouldSpawn;
+                //check if pipe is off the screen, if so, remove it from array
+                //use backwards for loop, as when item is spliced from array, whole array slides forward and one pipe is missed
+                for (var i = pipes.position.x.length - 1; i >= 0; i--) {
+                    //check if the x position is off the screen, if so, remove both x and y values from the two position arrays    
+                    if (pipes.position.x[i] < -10) {
+                        pipes.position.x.splice(i, 1);
+                        pipes.position.y.splice(i, 1);
+                    }
+                }
+                //loop through all the pipes, update the x position, and then redraw the pipes
+                for (var i = 0; i < pipes.position.x.length; i++) {
+                    pipes.position.x[i] -= pipes.speed;
+
+                    //add more pipes if there is a pipe at x-value 520--NOTE**THIS NUMBER MUST BE DIVISIBLE BY 4 WITH NO REMAINDER
+                    if (pipes.position.x[i] === 520) {
+                        //calculate a random center number for the space. In order to make sure that there is no pipe on either top or bottom, make the 
+                        //max number the overall height. It starts at the minimum distance from top that I want it to be, and goes to the max distance down
+                        //I want it to go
+                        randomCenter = Math.floor(Math.random() * (HEIGHT - 2 * (centerAmount / 2 + 40) + 1)) + 50 + (centerAmount / 2);
+                        //add a new value in the x position array. Pipes start on far side, so add WIDTH as the x position
+                        pipes.position.x.push(WIDTH);
+                        ////add a new value in the y position array. This is a random number that represents the center of the space between the pipes
+                        pipes.position.y.push(randomCenter);
+                        //shouldSpawn = Math.floor(Math.random() * 2) + 1;
+                        //50% chance of spawning a coin
+                        //if (shouldSpawn === 2) {
+                        addCoins(randomCenter);
+                        //}
+                    }
+                    //draw the bottom pipe, and fill in the extra space 
+                    ctx.drawImage(pipeUp, pipes.position.x[i] - 85, (centerAmount / 2) + pipes.position.y[i], 200, 300);
+                    ctx.drawImage(extraPipe, pipes.position.x[i] - 85, pipes.position.y[i] + 200, 200, 300);
+                    //draw the top pipe, and draw any extra space needed
+                    ctx.drawImage(pipeDown, pipes.position.x[i] - 85, -300 + (pipes.position.y[i] - (centerAmount / 2)), 200, 300);
+                    //Any extra pipe, it lines up perfectly, so I draw it no matter what, at the middle point subtract 200, as 
+                    //other pipe is 300 long
+                    ctx.drawImage(extraPipe, pipes.position.x[i] - 85, 0, 200, (pipes.position.y[i] - 200));
+                    //NOTE--200 size for pipe is equal to 30px
+                    //check if the user has passed throught the pipe, if so, add one to score;
+                    if (bird.position.x - bird.radius > pipes.position.x[i] + 28 && bird.position.x - bird.radius < pipes.position.x[i] + 32) {
+                        score += 1;
+                    }
+
+                }
+
+            }
+            //function used to draw what the user sees while game is running.
+            function drawScreen() {
+                ctx.fillStyle = "#000000";
+                rect(0, 0, WIDTH, HEIGHT);
+                drawPipes();
+                drawBird();
+                drawCoins();
+            }
+            //function that controles the end of the game for the user
+            function endGame() {
+                //if there score is higher than any of their previous scores, that is the new highscore
+                if (score > highScore) {
+                    highScore = score;
+                }
+                ctx.fillStyle = "#000000";
+                rect(0, 0, WIDTH, HEIGHT);
+                var message;
+                message = "Your final score was " + score;
+                ctx.fillStyle = "#FF0000"; //red
+                //draw text, (high score, score message and their score)
+                ctx.font = "50px Courier";
+                ctx.fillText(message, WIDTH / 2 - 345, HEIGHT - 480);
+                ctx.font = "30px Courier";
+                ctx.fillText("Score: " + score, 450, HEIGHT - 350);
+                ctx.fillText("Highscore: " + highScore, 450, HEIGHT - 300);
+                //get all the instances of the end game buttons and draw the buttons
+                var x = document.getElementsByClassName("endScreen");
+                for (var i = 0; i < x.length; i++) {
+                    x[i].style.display = "block";
+                }
+
+            }
+            //Function that will remove invisible coins, and draw the coins on screen if supposed to
+            function drawCoins() {
+                //remove invisible coins
+                for (var i = coin.position.x.length - 1; i >= 0; i--) {
+                    if (coin.position.x[i] < -20 || coin.position.showing[i] === false) {
+                        coin.position.x.splice(i, 1);
+                        coin.position.y.splice(i, 1);
+                        coin.position.showing.splice(i, 1);
+                    } else {
+                        //draw coins if supposed to
+                        ctx.drawImage(coinImage, coin.position.x[i] - coin.radius, coin.position.y[i] - coin.radius, coin.size.x, coin.size.y);
+                        coin.position.x[i] -= coin.speed;
+                    }
+                }
+            }
+            //functions that adds more coins to the screen, it adds the coin near the opening so its not impossible for the user to get the coin
+            function addCoins(randomCenter) {
+                //push the new coins x position to off the screen, at exactly half way between pipes
+                coin.position.x.push(WIDTH + 140);
+                //calculate a random location 150px from top or bottom of the center of the opening
+                var randomLocation = Math.floor(Math.random() * 300) + (randomCenter - 150);
+                //Make sure coin is on screen, if not, place it at the center of opening
+                if (randomLocation > 700 || randomLocation < 100) {
+                    randomLocation = randomCenter;
+                }
+                //add the y position of the coin to the location array
+                coin.position.y.push(randomLocation);
+                //set that coins visibility property to false
+                coin.position.showing.push(true);
+            }
+            //Check if the user has collected a coin, if so, set showing property to false, and add one to score
+            function checkCoinCollision() {
+                var distance;
+                for (var i = 0; i < coin.position.x.length; i++) {
+                    if (coin.position.x[i] < 100) {
+                        //find the distance between the center of the coin and center of the bird
+                        distance = Math.pow(Math.pow(bird.position.x - coin.position.x[i], 2) + Math.pow(bird.position.y - coin.position.y[i], 2), 1.0 / 2.0);
+                        //If the distance between the two centers is less than the radius of the bird plus the radius of the coin, the bird has 
+                        //hit the coin and the user gets one more point added the their score
+                        if (distance < coin.radius + bird.radius) {
+                            //set the coin that was showings visibilty property to false, so it is not drawn on the next redraw
+                            coin.position.showing[i] = false;
+                            score += 1;
+                        }
+                    }
+                }
+            }
+            //shows the user the start screen, gets called when the browser has loaded the page
+            function start() {
+                ctx = canvas.getContext("2d");
+                //Store the size of the canvas in variables, as the size is used often
+                HEIGHT = ctx.canvas.height;
+                WIDTH = ctx.canvas.width;
+                //draw a rectangle the size of the canvas over the canvas, used as background
+                rect(0, 0, WIDTH, HEIGHT);
+                //set the title of the page
+                document.title = "Flappy Bird";
+                //Load all the images needed
+                birdPic.src = "bird.png";
+                pauseSign.src = "pauseSign.png";
+                extraPipe.src = "extraPipe.png";
+                pipeDown.src = "pipeDown.png";
+                pipeUp.src = "pipeUp.png";
+                coinImage.src = "Coin.png";
+                //Show the start screen with all thee buttons
+                startScreen();
+            }
+            //function that calculates the animations
+            function gameLoop() {
+                if (gameState === "playing") {
+                    //call all the functions to run the game
+                    checkCollision();
+                    checkCoinCollision();
+                    if (!bird.collision) {
+                        move();
+                        drawScreen();
+                    } else {
+                        gameState = "endScreen";
+                    }
+                    ctx.fillStyle = "#FF0000"; //red
+                    //draw text
+                    ctx.font = "50px Courier";
+                    ctx.fillText(score, WIDTH / 2 - 10, HEIGHT - 510);
+                    requestAnimationFrame(gameLoop);
+                    //NOTE-There is NO code that needs to be run while paused, so I don't have an if statement for it
+                    //if the game State gets changed to the main screen, often when user dies, run the start screen for it
+                } else if (gameState === "startScreen") {
+                    startScreen();
+                    //if the user collides with a pipe, show the end game screen, as the game has ended
+                } else if (gameState === "endScreen") {
+                    endGame();
+                }
+            }
+
+            window.addEventListener("load", start, false);
+            window.addEventListener("keydown", jump, false);
+        </script>
+    </body>
+</html>
