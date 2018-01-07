@@ -240,8 +240,8 @@ activated by pressing "p".
             }
             //Runs whenever the user clickes the space bar. This then sets the birds velocity upwards
             function jump(event) {
-                //change the velocity if the user has pressed the space bar
-                if (event.key === " " && gameState === "playing") {
+                //change the velocity if the user has pressed the space bar--SOME browsers return spacebar instead of space
+                if (event.key === " " || event.keyIdentifier === " " || event.key === "Spacebar"&& gameState === "playing") {
                     //subtracts 12 from the current velocity, as down is positive, and the bird wants to go up on a jump
                     bird.velocityY = -12;
                 }
