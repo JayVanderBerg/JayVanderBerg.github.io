@@ -7,6 +7,7 @@ var canvas = document.getElementById("myCanvas");
 var ctx;
 var mainUser;
 var food;
+hasMoved = true;
 //function to draw a rectangle, often used for background of canvas
 //or the scene
 function rect(x, y, w, h) {
@@ -48,9 +49,9 @@ Snake.prototype.addLength = function () {
         this.xPos[this.xPos.length] = this.xPos[this.xPos.length - 1] - this.size;
         this.yPos[this.yPos.length] = this.yPos[this.yPos.length - 1];
     }
-    if(this.xPos.length > 10){
+    if (this.xPos.length > 10) {
         this.untilLoop = 5;
-    }else if(this.xPos.length >20){
+    } else if (this.xPos.length > 20) {
         this.untilLoop = 4;
     }
 };
@@ -62,6 +63,7 @@ Snake.prototype.moveLength = function () {
     }
     this.xPos[0] += this.xSpeed;
     this.yPos[0] += this.ySpeed;
+    hasMoved = true;
 };
 Snake.prototype.checkDeath = function () {
     for (var i = 0; i < this.xPos.length; i++) {
@@ -116,15 +118,15 @@ Snake.prototype.eatFood = function () {
 };
 Snake.prototype.shouldMove = function () {
     this.numLoops += 1;
-    if (this.numLoops ===this.untilLoop) {
+    if (this.numLoops === this.untilLoop) {
         this.numLoops = 0;
         return true;
     } else {
         return false;
     }
 };
-function instructionButton(){
-    window.alert("User \"wasd\" keys to move. Avoid hitting the walls, as well as yourself. Try to collect the white food squares")
+function instructionButton() {
+    window.alert("User \"wasd\" keys to move. Avoid hitting the walls, as well as yourself. Try to collect the white food squares");
 }
 function startGame() {
     mainUser = new Snake(20);
@@ -169,14 +171,20 @@ function animation() {
 }
 //Function to deal with any key presses
 function keyPressed(evt) {
-    if (evt.key === "w" && mainUser.ySpeed <= 0) {
+    if (evt.key === "w" && mainUser.ySpeed <= 0 && hasMoved === true) {
+        hasMoved = false;
+        console.log("Moving up");
         mainUser.directionMoving(0, -20);
-    } else if (evt.key === "a" && mainUser.xSpeed <= 0) {
+    } else if (evt.key === "a" && mainUser.xSpeed <= 0 && hasMoved === true) {
+        hasMoved = false;
         mainUser.directionMoving(-20, 0);
-    } else if (evt.key === "d" && mainUser.xSpeed >= 0) {
+    } else if (evt.key === "d" && mainUser.xSpeed >= 0 && hasMoved === true) {
+        hasMoved = false;
         mainUser.directionMoving(20, 0);
-    } else if (evt.key === "s" && mainUser.ySpeed >= 0) {
+    } else if (evt.key === "s" && mainUser.ySpeed >= 0 && hasMoved === true) {
         mainUser.directionMoving(0, 20);
+        hasMoved = false;
+
     }
 }
 function gameLoop() {
