@@ -1,0 +1,58 @@
+#mainScreen{
+    padding: 0;
+    margin: auto;
+    display: block;
+    width: 1000px;
+    height: 560px;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 0;
+}
+canvas{
+    position: absolute;
+    z-index: 1;
+    display: block;
+}
+#startButton{
+    position: absolute;
+    width: 400px;
+    height: 100px;
+    top: 200px;
+    left: 280px;
+    z-index:2;
+}
+#instructionButton{
+    position: absolute;
+    width: 400px;
+    height: 100px;
+    top: 400px;
+    left: 280px;
+    z-index: 3;
+}
+.buttonStart{
+    background-color: #458B00;
+    border-radius:15px;
+    text-align: center;
+    color: black;
+    font-size: 40px;
+    border: none;
+    display: block;
+}
+.buttonStart:hover{
+    background-color: #4A7023;
+}
+#playAgain {
+    position: absolute;
+    top: 450px;
+    left: 50px;
+    z-index: 4;
+}
+#startScreen {
+    position: absolute;
+    top: 450px;
+    left: 500px;
+    z-index: 5;
+}
