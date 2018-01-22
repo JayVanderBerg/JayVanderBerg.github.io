@@ -20,17 +20,29 @@ and open the template in the editor.
                 background-color: black;
                 z-index: 0;
             }
+            #text{
+                color: white;
+                position: absolute;
+                z-index: 2;
+                top: 0px;
+                left: 120px;
+            }
         </style>
     </head>
     <body>
         <div id = "buttons">
-            <a href = "FlappyBird/flappyBird.html">
-                <button class = "pages" id = "flappyBird">Flappy Bird</button>
+            <a class = "pages" href = "FlappyBird/flappyBird.html">
+                <button class = "pages" id = "flappyBird" style = "width: 100px; height: 20px;
+                        top: 17px; left: 10px; position: absolute; z-index: 1;">Flappy Bird</button>
             </a>
-            <a href = "Snake/snake.html">
-                <button class = "pages" id = "snake" >Snake</button>
+            <a href = "Snake/snake.html" class = "pages">
+                <button class = "pages" id = "snake" style = "width: 100px; height: 20px;
+                        top: 52px; left: 10px; position: absolute; z-index: 1;" >Snake</button>
             </a>        
-
+            <div id = "text">
+                <p id = "fDescription">A replica of the popular mobile game "Flappy Bird"</p>
+                <p id = "sDescription">A snake game where you eat food and grow longer</p>
+            </div>
         </div>
     </body>
 </html>
